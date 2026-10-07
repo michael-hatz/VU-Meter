@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
@@ -84,9 +85,33 @@ class SettingsDialog(
         val speeds = arrayOf("Sehr langsam", "Langsam", "Mittel", "Schnell", "Sehr schnell")
 
         header("Darstellung")
-        choice("Ansicht", view.visualizers.map { it.name }.toTypedArray(), s.viz) {
-            if (it != s.viz) view.select(it)
+        val names = view.visualizers.map { it.name }.toTypedArray()
+        choice("Ansicht", names, view.currentIndex) {
+            if (it != view.currentIndex) view.select(it)
         }
+        root.addView(Button(ctx).apply {
+            text = "Ansichten zum Durchschalten auswählen …"
+            setOnClickListener {
+                val checked = BooleanArray(names.size) { names[it] !in s.hiddenViz }
+                AlertDialog.Builder(ctx)
+                    .setTitle("Ansichten beim Tippen/Wischen")
+                    .setMultiChoiceItems(names, checked) { _, i, on -> checked[i] = on }
+                    .setPositiveButton("OK") { _, _ ->
+                        val hidden = names.filterIndexed { i, _ -> !checked[i] }.toSet()
+                        // Mindestens eine Ansicht muss bleiben
+                        s.hiddenViz = if (hidden.size >= names.size) emptySet() else hidden
+                    }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            }
+        }, wrap)
+
+        header("Dauerbetrieb")
+        choice("Diashow (Ansicht automatisch wechseln)", arrayOf("Aus", "Jede Minute", "Alle 2 Minuten", "Alle 5 Minuten"),
+            s.slideshow) { s.slideshow = it }
+        toggle("Uhrzeit einblenden", s.showClock) { s.showClock = it }
+        choice("Ruhemodus bei Stille (Bildschirm dunkel)", arrayOf("Aus", "Nach 2 Minuten", "Nach 5 Minuten", "Nach 15 Minuten"),
+            s.idleMode) { s.idleMode = it }
 
         header("Empfindlichkeit")
         toggle("Automatisch anpassen", s.autoGain) { s.autoGain = it }
@@ -104,6 +129,9 @@ class SettingsDialog(
         choice("Größe", arrayOf("Vollbild", "Original (76×16 Pixel, skaliert)"), if (s.waOriginalSize) 1 else 0) {
             s.waOriginalSize = it == 1
         }
+
+        header("Schallpegel")
+        slider("Kalibrierung (dB SPL bei 0 dBFS)", 80, 140, s.splOffset, { "$it dB" }) { s.splOffset = it }
 
         header("MilkDrop-Stil")
         choice("Preset-Wechsel", arrayOf("Alle 10 Sekunden", "Alle 20 Sekunden", "Alle 40 Sekunden", "Nur manuell"),

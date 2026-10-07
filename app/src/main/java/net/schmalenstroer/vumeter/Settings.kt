@@ -9,8 +9,24 @@ class Settings(ctx: Context) {
     private fun put(k: String, v: Int) = p.edit().putInt(k, v).apply()
     private fun put(k: String, v: Boolean) = p.edit().putBoolean(k, v).apply()
 
-    var viz = p.getInt("viz", 0)
-        set(v) { field = v; put("viz", v) }
+    /** Name der gewählten Ansicht (Name statt Index, damit neue Ansichten die Auswahl nicht verschieben). */
+    var vizName: String = p.getString("vizName", "") ?: ""
+        set(v) { field = v; p.edit().putString("vizName", v).apply() }
+    /** Beim Durchschalten übersprungene Ansichten (Namen). */
+    var hiddenViz: Set<String> = p.getStringSet("hiddenViz", emptySet())?.toSet() ?: emptySet()
+        set(v) { field = v; p.edit().putStringSet("hiddenViz", v).apply() }
+
+    /** Diashow: 0 = aus, sonst Index in [SLIDESHOW_SEC] */
+    var slideshow = p.getInt("slideshow", 0)
+        set(v) { field = v; put("slideshow", v) }
+    var showClock = p.getBoolean("showClock", false)
+        set(v) { field = v; put("showClock", v) }
+    /** Ruhemodus bei Stille: 0 = aus, sonst Index in [IDLE_SEC] */
+    var idleMode = p.getInt("idleMode", 0)
+        set(v) { field = v; put("idleMode", v) }
+    /** Schallpegel: dB SPL bei 0 dBFS (Android-Richtwert: 94 dB SPL ≈ −22 dBFS). */
+    var splOffset = p.getInt("splOffset", 116)
+        set(v) { field = v; put("splOffset", v) }
 
     var autoGain = p.getBoolean("autoGain", true)
         set(v) { field = v; put("autoGain", v) }
@@ -53,4 +69,9 @@ class Settings(ctx: Context) {
 
     var waOriginalSize = p.getBoolean("waOriginalSize", false)
         set(v) { field = v; put("waOriginalSize", v) }
+
+    companion object {
+        val SLIDESHOW_SEC = intArrayOf(0, 60, 120, 300)
+        val IDLE_SEC = intArrayOf(0, 120, 300, 900)
+    }
 }

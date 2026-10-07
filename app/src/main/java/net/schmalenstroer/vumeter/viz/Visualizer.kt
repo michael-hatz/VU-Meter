@@ -28,7 +28,7 @@ abstract class Visualizer(val name: String) {
 }
 
 /** Kleiner Pixelpuffer, der ohne Filterung hochskaliert wird (Retro-Look, sehr günstig). */
-class PixelSurface {
+class PixelSurface(smooth: Boolean = false) {
     var w = 0
         private set
     var h = 0
@@ -36,7 +36,7 @@ class PixelSurface {
     var px = IntArray(0)
         private set
     private var bmp: Bitmap? = null
-    private val paint = Paint().apply { isFilterBitmap = false; isDither = false; isAntiAlias = false }
+    private val paint = Paint().apply { isFilterBitmap = smooth; isDither = false; isAntiAlias = false }
 
     fun ensure(w: Int, h: Int) {
         if (w == this.w && h == this.h && bmp != null) return

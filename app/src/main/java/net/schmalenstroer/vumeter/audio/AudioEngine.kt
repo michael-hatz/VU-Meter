@@ -10,6 +10,7 @@ import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
 import android.os.Build
 import android.os.Process
+import android.os.SystemClock
 import android.util.Log
 import kotlin.math.PI
 import kotlin.math.abs
@@ -31,6 +32,11 @@ class AudioFrame {
     /** true, wenn seit dem letzten Lesen neue Audiodaten analysiert wurden. */
     var fresh = false
     internal var seq = 0L
+    /** Erkanntes Tempo (0 = unbekannt) und wie sicher die Erkennung ist (0..1). */
+    var bpm = 0f
+    var bpmConfidence = 0f
+    /** Zählt jeden erkannten Beat hoch. */
+    var beatCount = 0L
 }
 
 /**
@@ -56,6 +62,13 @@ class AudioEngine(private val context: Context) {
     private var lastRms = 0f
     private var lastPeak = 0f
     private var seq = 0L
+    private var sharedBpm = 0f
+    private var sharedBpmConf = 0f
+    private var sharedBeats = 0L
+
+    /** Zeitpunkt (elapsedRealtime) des letzten Signals deutlich über dem Grundrauschen. */
+    @Volatile var lastLoudMs = SystemClock.elapsedRealtime()
+        private set
 
     @Volatile var sourceName = "–"
         private set
@@ -70,6 +83,7 @@ class AudioEngine(private val context: Context) {
     fun start() {
         if (running) return
         error = null
+        lastLoudMs = SystemClock.elapsedRealtime()
         running = true
         thread = Thread(::run, "AudioEngine").also { it.start() }
     }
@@ -95,6 +109,9 @@ class AudioEngine(private val context: Context) {
             f.peak = lastPeak
             f.fresh = seq != f.seq
             f.seq = seq
+            f.bpm = sharedBpm
+            f.bpmConfidence = sharedBpmConf
+            f.beatCount = sharedBeats
         }
         f.rmsDb = toDb(f.rms)
         f.peakDb = toDb(f.peak)
@@ -131,6 +148,10 @@ class AudioEngine(private val context: Context) {
         val wave = FloatArray(WAVE_SIZE)
         // Amplitudennormierung: 2 / Summe(Hann) = 4 / N, quadriert für Leistung
         val norm = (4f / FFT_SIZE) * (4f / FFT_SIZE)
+        val beats = BeatTracker(SAMPLE_RATE.toFloat() / HOP)
+        var noiseFloor = -60f
+        var smoothPow = 1e-9f
+        val hopSec = HOP.toFloat() / SAMPLE_RATE
 
         try {
             rec?.startRecording()
@@ -168,6 +189,15 @@ class AudioEngine(private val context: Context) {
                 }
                 fft.transform(re, im)
                 for (k in 0 until FFT_SIZE / 2) power[k] = (re[k] * re[k] + im[k] * im[k]) * norm
+                beats.process(power)
+
+                // Ruhemodus: geglätteter Pegel (~0,3 s) gegen langsam nachgeführtes Grundrauschen.
+                // Leiser als −70 dBFS zählt nie als Musik, lauter als −40 dBFS immer.
+                smoothPow += ((ss / HOP).toFloat() - smoothPow) * (hopSec / 0.3f)
+                val lvl = 10f * log10(smoothPow + 1e-12f)
+                noiseFloor = if (lvl < noiseFloor) noiseFloor + (lvl - noiseFloor) * 0.05f
+                else noiseFloor + hopSec / 60f
+                if (lvl > -40f || (lvl > -70f && lvl > noiseFloor + 12f)) lastLoudMs = SystemClock.elapsedRealtime()
 
                 var mean = 0f
                 val start = pos - WAVE_SIZE
@@ -185,6 +215,9 @@ class AudioEngine(private val context: Context) {
                     sumSq += ss
                     sumCount += HOP
                     if (pk > peakAcc) peakAcc = pk
+                    sharedBpm = beats.bpm
+                    sharedBpmConf = beats.confidence
+                    sharedBeats = beats.beatCount
                     seq++
                 }
             }
@@ -200,6 +233,8 @@ class AudioEngine(private val context: Context) {
                 sharedWave.fill(0f)
                 lastRms = 0f
                 lastPeak = 0f
+                sharedBpm = 0f
+                sharedBpmConf = 0f
                 seq++
             }
             running = false

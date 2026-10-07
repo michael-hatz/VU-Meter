@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.SystemClock
 import android.view.Choreographer
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -12,19 +13,34 @@ import android.view.View
 import net.schmalenstroer.vumeter.audio.AudioEngine
 import net.schmalenstroer.vumeter.milk.MilkdropViz
 import net.schmalenstroer.vumeter.viz.AnalogVu
+import net.schmalenstroer.vumeter.viz.BbcPpm
+import net.schmalenstroer.vumeter.viz.BpmView
+import net.schmalenstroer.vumeter.viz.ChromaView
+import net.schmalenstroer.vumeter.viz.Fire
 import net.schmalenstroer.vumeter.viz.LedSpectrum
 import net.schmalenstroer.vumeter.viz.LevelMeter
+import net.schmalenstroer.vumeter.viz.LightOrgan
+import net.schmalenstroer.vumeter.viz.MagicEye
+import net.schmalenstroer.vumeter.viz.NixieClock
+import net.schmalenstroer.vumeter.viz.PhosphorScope
+import net.schmalenstroer.vumeter.viz.PulsarLines
 import net.schmalenstroer.vumeter.viz.RadialSpectrum
+import net.schmalenstroer.vumeter.viz.SoundLevel
 import net.schmalenstroer.vumeter.viz.Spectrogram
+import net.schmalenstroer.vumeter.viz.Starfield
+import net.schmalenstroer.vumeter.viz.VfdDisplay
 import net.schmalenstroer.vumeter.viz.Visualizer
 import net.schmalenstroer.vumeter.viz.WinampScope
 import net.schmalenstroer.vumeter.viz.WinampSpectrum
+import java.util.Calendar
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 
 /**
  * Vollbild-View: zeichnet im Takt des Displays (Choreographer), optional auf 30 FPS begrenzt.
  * Tippen/Wischen wechselt die Darstellung, langes Drücken öffnet die Einstellungen.
+ * Kümmert sich außerdem um Diashow, Uhr-Einblendung und Ruhemodus.
  */
 @SuppressLint("ViewConstructor")
 class VisualizerView(
@@ -34,11 +50,15 @@ class VisualizerView(
 ) : View(ctx), Choreographer.FrameCallback {
 
     val visualizers: List<Visualizer> = listOf(
-        WinampSpectrum(s), WinampScope(s), LedSpectrum(), AnalogVu(), LevelMeter(), Spectrogram(), RadialSpectrum(),
+        WinampSpectrum(s), WinampScope(s), LedSpectrum(), VfdDisplay(),
+        AnalogVu(), BbcPpm(), MagicEye(), LevelMeter(), NixieClock(),
+        SoundLevel(s), BpmView(), ChromaView(),
+        Spectrogram(), PulsarLines(), PhosphorScope(), Fire(), LightOrgan(), Starfield(), RadialSpectrum(),
         MilkdropViz(),
     )
     private val analysis = Analysis(s)
-    private var current = visualizers[s.viz.coerceIn(0, visualizers.size - 1)]
+    private var index = visualizers.indexOfFirst { it.name == s.vizName }.coerceAtLeast(0)
+    private val current get() = visualizers[index]
 
     var onOpenSettings: (() -> Unit)? = null
     var onStatusTap: (() -> Unit)? = null
@@ -50,8 +70,11 @@ class VisualizerView(
     var onVerticalFling: ((Int) -> Unit)? = null
     /** FPS-Quelle der OpenGL-Ansicht. */
     var glFps: (() -> Float)? = null
+    /** Ruhemodus an/aus (Activity dimmt den Bildschirm). */
+    var onIdleChanged: ((Boolean) -> Unit)? = null
 
-    val isGl get() = current.usesGl
+    val isGl get() = current.usesGl && !idle
+    val currentIndex get() = index
     /** Dauerhafte Meldung (z. B. fehlende Berechtigung). */
     var status: String? = null
         set(v) { field = v; invalidate() }
@@ -67,6 +90,12 @@ class VisualizerView(
     private var downX = 0f
     private var downY = 0f
     private var downTime = 0L
+    private var lastInteractionMs = SystemClock.elapsedRealtime()
+    private var lastSwitchMs = SystemClock.elapsedRealtime()
+    private var idle = false
+    private val cal = Calendar.getInstance()
+    private var clockMinute = -1
+    private var clockText = ""
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
@@ -95,17 +124,25 @@ class VisualizerView(
         showOverlay(HINT, 4f)
     }
 
-    fun select(index: Int) {
-        val i = ((index % visualizers.size) + visualizers.size) % visualizers.size
-        s.viz = i
+    fun select(i: Int) {
         val wasGl = isGl
-        current = visualizers[i]
+        index = ((i % visualizers.size) + visualizers.size) % visualizers.size
+        s.vizName = current.name
+        lastSwitchMs = SystemClock.elapsedRealtime()
         if (wasGl != isGl) onGlModeChanged?.invoke(isGl)
         showOverlay(current.name, 2f)
         invalidate()
     }
 
-    private fun step(d: Int) = select(s.viz + d)
+    /** Nächste/vorherige Ansicht, ausgeblendete werden übersprungen. */
+    private fun step(d: Int) {
+        var i = index
+        for (n in visualizers.indices) {
+            i = ((i + d) % visualizers.size + visualizers.size) % visualizers.size
+            if (visualizers[i].name !in s.hiddenViz) break
+        }
+        select(i)
+    }
 
     fun showOverlay(text: String, seconds: Float) {
         overlay = text
@@ -117,24 +154,48 @@ class VisualizerView(
         if (looping) return
         looping = true
         lastDrawNs = 0L
+        lastInteractionMs = SystemClock.elapsedRealtime()
         Choreographer.getInstance().postFrameCallback(this)
     }
 
     fun stop() {
         looping = false
         Choreographer.getInstance().removeFrameCallback(this)
+        setIdle(false)
+    }
+
+    private fun setIdle(on: Boolean) {
+        if (on == idle) return
+        val wasGl = isGl
+        idle = on
+        if (wasGl != isGl) onGlModeChanged?.invoke(isGl)
+        onIdleChanged?.invoke(on)
+        invalidate()
     }
 
     override fun doFrame(frameTimeNanos: Long) {
         if (!looping) return
         Choreographer.getInstance().postFrameCallback(this)
+        val now = SystemClock.elapsedRealtime()
+
+        // Ruhemodus: lange Stille und keine Berührung
+        val idleSec = Settings.IDLE_SEC[s.idleMode.coerceIn(0, Settings.IDLE_SEC.size - 1)]
+        val quietFor = now - max(engine.lastLoudMs, lastInteractionMs)
+        if (idleSec > 0 && !idle && quietFor > idleSec * 1000L) setIdle(true)
+        else if (idle && (idleSec == 0 || quietFor < 1000L)) setIdle(false)
+        if (idle) return
+
+        // Diashow
+        val showSec = Settings.SLIDESHOW_SEC[s.slideshow.coerceIn(0, Settings.SLIDESHOW_SEC.size - 1)]
+        if (showSec > 0 && now - max(lastSwitchMs, lastInteractionMs) > showSec * 1000L) step(1)
+
         val minInterval = if (s.fps60) 0L else 25_000_000L
         if (frameTimeNanos - lastFrameNs >= minInterval) {
             lastFrameNs = frameTimeNanos
             if (isGl) {
                 onGlFrame?.invoke()
                 // Eigene Ebene nur neu zeichnen, wenn Text darüber liegt
-                if (overlay != null || s.showFps || status != null || engine.error != null || drewText) invalidate()
+                if (overlay != null || s.showFps || s.showClock || status != null || engine.error != null || drewText) invalidate()
             } else {
                 invalidate()
             }
@@ -143,6 +204,12 @@ class VisualizerView(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        lastInteractionMs = SystemClock.elapsedRealtime()
+        if (idle) {
+            // Erste Berührung weckt nur auf
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) setIdle(false)
+            return true
+        }
         // Wischen über die Strecke erkennen statt über die Geschwindigkeit: robuster, wenn der
         // Finger vor dem Loslassen kurz anhält (dann meldet der VelocityTracker 0)
         when (event.actionMasked) {
@@ -171,6 +238,10 @@ class VisualizerView(
         lastDrawNs = now
         fps += (1f / dt - fps) * 0.05f
 
+        if (idle) {
+            c.drawColor(Color.BLACK)
+            return
+        }
         if (isGl) {
             // Transparent lassen: die OpenGL-Fläche dahinter ist sichtbar
             drewText = false
@@ -213,6 +284,19 @@ class VisualizerView(
             smallPaint.textSize = h * 0.03f
             val f = if (isGl) glFps?.invoke() ?: fps else fps
             c.drawText("${f.toInt()} FPS", width - h * 0.02f, h * 0.05f, smallPaint)
+            drewText = true
+        }
+        if (s.showClock) {
+            cal.timeInMillis = System.currentTimeMillis()
+            val m = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+            if (m != clockMinute) {
+                clockMinute = m
+                clockText = String.format(Locale.GERMANY, "%02d:%02d", m / 60, m % 60)
+            }
+            smallPaint.textSize = h * 0.045f
+            smallPaint.alpha = 170
+            c.drawText(clockText, width - h * 0.03f, h - h * 0.03f, smallPaint)
+            smallPaint.alpha = 200
             drewText = true
         }
     }

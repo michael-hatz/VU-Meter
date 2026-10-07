@@ -1,5 +1,7 @@
 Visualizes the music playing around you, captured through the built-in microphone.
 
-Views: Winamp Classic spectrum and oscilloscope, LED spectrum, analog VU meters, level meter, spectrogram, a radial view and a MilkDrop-style feedback visualizer.
+20 views: Winamp Classic spectrum and oscilloscope, LED spectrum, 80s VFD display, analog VU meters, BBC-scale PPM, magic eye tube, level meter, Nixie clock, dB(A) sound level meter, BPM display, note and chord detection, spectrogram, pulsar lines, phosphor oscilloscope, demoscene fire, light organ, starfield, radial view and a MilkDrop-style feedback visualizer.
+
+Slideshow, clock overlay and sleep-on-silence for always-on use.
 
 No ads, no tracking, no internet permission. Audio is analyzed only, never stored.

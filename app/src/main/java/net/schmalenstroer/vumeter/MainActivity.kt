@@ -42,6 +42,11 @@ class MainActivity : Activity() {
         view.onGlFrame = { glView.requestRender() }
         view.onVerticalFling = { dir -> glView.queueEvent { renderer.step(dir) } }
         view.glFps = { renderer.fps }
+        view.onIdleChanged = { dim ->
+            window.attributes = window.attributes.apply {
+                screenBrightness = if (dim) 0.01f else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            }
+        }
         glView.visibility = if (view.isGl) View.VISIBLE else View.GONE
 
         val root = FrameLayout(this)

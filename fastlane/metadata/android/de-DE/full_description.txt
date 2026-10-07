@@ -1,13 +1,13 @@
 Zeigt eine Visualisierung der Musik, die in der Umgebung läuft – aufgenommen über das eingebaute Mikrofon.
 
-Darstellungen:
-* Winamp Classic – Spektrum (19 oder 75 Bänder, Stile Normal/Feuer/Linie, fallende Spitzen)
-* Winamp Classic – Oszilloskop (Punkte/Linien/Gefüllt)
-* LED-Spektrum (32 Bänder)
-* Analoge VU-Meter (VU und Spitzenpegel mit Zeigerphysik)
-* Pegelmeter (RMS und Spitze)
-* Spektrogramm (Wasserfall)
-* Radial
+20 Ansichten:
+* Winamp Classic – Spektrum und Oszilloskop
+* LED-Spektrum und VFD-Display im Stil der 80er
+* Analoge VU-Meter, PPM mit BBC-Skala, Magisches Auge, Pegelmeter, Nixie-Uhr
+* Schallpegelmesser dB(A), BPM-Anzeige, Noten- und Akkorderkennung
+* Spektrogramm, Pulsar-Linien, Phosphor-Oszilloskop, Demoszene-Feuer, Lichtorgel, Sternenflug, Radial
 * MilkDrop-Stil (Rückkopplungs-Visualisierung mit 12 Presets)
+
+Für den Dauerbetrieb: Diashow, Uhrzeit-Einblendung und Ruhemodus bei Stille.
 
 Keine Werbung, kein Tracking, keine Internetberechtigung. Audio wird nur analysiert, nie gespeichert.
