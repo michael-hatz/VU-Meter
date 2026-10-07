@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FF14181C" android:pathData="M22,6H86A16,16 0 0 1 102,22V86A16,16 0 0 1 86,102H22A16,16 0 0 1 6,86V22A16,16 0 0 1 22,6Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M30,58H36V74H30Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M30,52H36V58H30Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M30,48H36V49.5H30Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M38,58H44V74H38Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M38,46H44V58H38Z"/>
+    <path android:fillColor="#FFEF3110" android:pathData="M38,38H44V46H38Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M38,34H44V35.5H38Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M46,58H52V74H46Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M46,46H52V58H46Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M46,42H52V43.5H46Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M54,58H60V74H54Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M54,46H60V58H54Z"/>
+    <path android:fillColor="#FFEF3110" android:pathData="M54,34H60V46H54Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M54,30H60V31.5H54Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M62,58H68V74H62Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M62,46H68V58H62Z"/>
+    <path android:fillColor="#FFEF3110" android:pathData="M62,44H68V46H62Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M62,40H68V41.5H62Z"/>
+    <path android:fillColor="#FF29CE10" android:pathData="M70,58H76V74H70Z"/>
+    <path android:fillColor="#FFD6B521" android:pathData="M70,56H76V58H70Z"/>
+    <path android:fillColor="#FF969696" android:pathData="M70,52H76V53.5H70Z"/>
+</vector>

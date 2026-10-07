@@ -1,0 +1,5 @@
+Visualizes the music playing around you, captured through the built-in microphone.
+
+Views: Winamp Classic spectrum and oscilloscope, LED spectrum, analog VU meters, level meter, spectrogram, a radial view and a MilkDrop-style feedback visualizer.
+
+No ads, no tracking, no internet permission. Audio is analyzed only, never stored.
