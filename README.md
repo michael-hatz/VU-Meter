@@ -1,85 +1,147 @@
 # VU-Meter
 
-Android-App, die Musik aus der Umgebung über das eingebaute Mikrofon aufnimmt und visualisiert –
-im Stil des Winamp-Classic-Spektrums und weiterer klassischer Anzeigen.
+**Turn your Android phone or tablet into a music visualizer.**
 
-## Ansichten
+VU-Meter listens to the music playing in the room through your device's built-in microphone and shows it live on screen, in 20 different views. You get the classic Winamp spectrum, analog needle meters, glowing tube displays, a sound level meter, a BPM counter and a MilkDrop-style light show.
 
-| Gruppe | Ansicht | Beschreibung |
-|--------|---------|--------------|
-| Winamp | Winamp Classic – Spektrum | Originalpalette (viscolor.txt), Punktraster, 19/75 Bänder, Stile Normal/Feuer/Linie, fallende Spitzen |
-| | Winamp Classic – Oszilloskop | Punkte, Linien oder gefüllt |
-| Spektrum | LED-Spektrum | 32 Bänder, segmentiert, Peak-Hold |
-| | VFD-Display | Leuchtanzeige im Stil von Hi-Fi-Geräten der 80er, mit Pegelzeile |
-| Pegel | Analoge VU-Meter | VU (RMS, 300 ms) und Spitzenpegel mit Zeigerphysik |
-| | PPM (BBC-Skala) | Schwarzes Zifferblatt, Skala 1–7, Rücklauf 24 dB in 2,8 s |
-| | Magisches Auge | Abstimmanzeige alter Röhrenradios (rund wie EM34, Leuchtband wie EM84) |
-| | Pegelmeter | LED-Pegel für RMS und Spitze mit Zahlenwert |
-| | Nixie-Uhr | Uhrzeit in Ziffernröhren, Glimmpunkte im Takt, Balkenröhren für den Pegel |
-| Messen | Schallpegel dB(A) | A-Bewertung, Zeitbewertung Fast, Max/Leq 60 s, Verlauf; kalibrierbar |
-| | BPM-Anzeige | Tempo, Tempobezeichnung, Taktschläge, Tempoverlauf |
-| | Noten & Akkorde | 12 Tonklassen, Dur-/Moll-Erkennung, leuchtende Klaviatur |
-| Visualisierung | Spektrogramm | Laufender Wasserfall, ca. 8 s Verlauf |
-| | Pulsar-Linien | Gestaffelte Spektrumlinien wie auf dem bekannten Pulsar-Plattencover |
-| | Phosphor-Oszilloskop | Grüner Röhrenschirm, getriggert, mit Nachleuchten |
-| | Demoszene-Feuer | Klassischer Feuereffekt, vom Spektrum angefacht |
-| | Lichtorgel | Vier Farblampen für Bass bis Höhen (bewusst ohne Stroboskop) |
-| | Sternenflug | Fluggeschwindigkeit folgt dem Bass |
-| | Radial | Kreisförmiges Spektrum mit Bass-Puls und Wellenform-Ring |
-| | MilkDrop-Stil | Rückkopplungs-Visualisierung wie MilkDrop (OpenGL ES 2.0), 12 eigene Presets |
+It works with any music source (a record player, the radio, a live band or a party next door) because it listens instead of connecting to a player. Put it next to your stereo and it works as a retro hi-fi display.
 
-**Bedienung:** Tippen oder Wischen (links/rechts) wechselt die Ansicht, langes Drücken öffnet die Einstellungen.
-Im MilkDrop-Stil wechselt Wischen nach oben/unten das Preset.
+<p align="center">
+  <img src="docs/screenshots/winamp-spectrum.jpg" width="49%" alt="Winamp Classic spectrum">
+  <img src="docs/screenshots/analog-vu.jpg" width="49%" alt="Analog VU meters">
+  <img src="docs/screenshots/milkdrop.jpg" width="49%" alt="MilkDrop-style visualizer">
+  <img src="docs/screenshots/nixie-clock.jpg" width="49%" alt="Nixie clock">
+</p>
 
-**Dauerbetrieb** (Einstellungen): Diashow wechselt die Ansicht automatisch, die Uhrzeit lässt sich
-einblenden, und der Ruhemodus dunkelt den Bildschirm nach längerer Stille ab (Musik oder Berührung
-weckt ihn wieder). Welche Ansichten beim Durchschalten vorkommen, ist auswählbar.
+## Highlights
 
-### MilkDrop-Stil
+- **20 views** in five groups: Winamp, spectrum, level meters, measuring tools and visualizations
+- **Works with any sound source**, because it listens through the microphone
+- **Simple to use**: tap or swipe to change the view, long-press for settings
+- **Always-on mode** for a second screen or party display: a slideshow, a clock overlay and a sleep mode that dims the screen when the music stops
+- **Adjusts to the room**: sensitivity adapts automatically to quiet and loud rooms
+- **Small and private**: no ads, no tracking and no internet permission. Audio is analyzed live and is never recorded or stored.
+- **Runs on old devices** too, from Android 5.0 onward, with a 30 FPS mode for slower hardware
 
-Nachbau des MilkDrop-Prinzips, nicht kompatibel mit `.milk`-Dateien:
+## The views
 
-- Jedes Bild entsteht aus dem vorherigen: ein 48×32-Gitter zoomt, dreht und verzerrt es
-  (Warp-Formeln wie im Original) und dunkelt es ab (`decay`).
-- Darüber: Wellenform (Kreis, Linie, Lissajous, Spektrum-Ring, Doppellinie), Formen (auch mit dem
-  vorherigen Bild als Textur → Kaleidoskop), Ränder, die ins Bild „einfließen“, Video-Echo.
-- Presets sind Kotlin-Lambdas in `milk/Presets.kt` mit denselben Variablen wie MilkDrop
-  (`zoom`, `rot`, `warp`, `bass`, `bass_att`, `q1…` usw.) – neue Presets sind schnell ergänzt.
-- `bass`/`mid`/`treb` sind relativ zum gleitenden Mittel (≈ 1), daher unabhängig von der Mikrofonlautstärke.
-- Interne Auflösung 1024×512 oder 512×256 (Einstellung), automatischer Wechsel alle 10/20/40 s auf einen Beat.
+### Winamp
 
-## Technik
+| | |
+|---|---|
+| ![Winamp Classic spectrum](docs/screenshots/winamp-spectrum.jpg) | ![Winamp Classic oscilloscope](docs/screenshots/winamp-oscilloscope.jpg) |
+| **Winamp Classic – Spectrum**<br>The famous Winamp 2 spectrum analyzer with its original colors and dot grid. Choose 19 wide or 75 thin bars, the *Normal*, *Fire* or *Line* color style, and falling peak markers. | **Winamp Classic – Oscilloscope**<br>The waveform as Winamp drew it, using dots, lines or a filled curve. Both Winamp views can also be shown at their original tiny 76×16 pixel size, scaled up. |
 
-- Kotlin, **keine Bibliotheken** (kein AndroidX/Compose) – Release-APK ≈ 100 KB, minSdk 21 (Android 5.0), OpenGL ES 2.0
-- Aufnahme in eigenem Thread: 44,1 kHz mono, FFT 2048 (Hann), neue Analyse alle 512 Samples (~86/s)
-- Bevorzugt die Audioquelle `UNPROCESSED`, sonst `VOICE_RECOGNITION`; AGC/Rauschunterdrückung werden abgeschaltet
-- Zeichnen per Canvas im Displaytakt (Choreographer); Winamp über eine 76 px breite Bitmap,
-  die ungefiltert hochskaliert wird; statische Teile (Skalen, LED-Raster) sind vorgerendert
-- Automatische Empfindlichkeit passt sich an die Lautstärke im Raum an (abschaltbar)
-- Tempo-Erkennung im Audio-Thread: spektraler Fluss → Autokorrelation über ~6 s, Beats an Onsets
-  ausgerichtet und bei kurzen Lücken im erkannten Tempo weitergezählt
-- Schallpegel: Standard-Kalibrierung nach dem Android-Richtwert (94 dB SPL ≈ −22 dBFS), anpassbar
-- Für ältere Geräte: in den Einstellungen auf 30 FPS begrenzen
+### Spectrum
 
-## Bauen
+| | |
+|---|---|
+| ![LED spectrum](docs/screenshots/led-spectrum.jpg) | ![VFD display](docs/screenshots/vfd-display.jpg) |
+| **LED Spectrum**<br>A 32-band segmented LED analyzer with peak hold. | **VFD Display**<br>A glowing vacuum fluorescent display like those on 1980s hi-fi equipment, with a level bar. |
 
-Voraussetzungen: JDK 17 und Android SDK (Platform 35).
+### Level meters
+
+| | |
+|---|---|
+| ![Analog VU meters](docs/screenshots/analog-vu.jpg) | ![BBC PPM](docs/screenshots/bbc-ppm.jpg) |
+| **Analog VU Meters**<br>Two backlit needle meters for average (VU) and peak level, with realistic needle movement. | **PPM (BBC scale)**<br>The black broadcast peak meter with its 1–7 scale, as used in radio studios. |
+| ![Magic eye](docs/screenshots/magic-eye.jpg) | ![Level meter](docs/screenshots/level-meter.jpg) |
+| **Magic Eye**<br>The green tuning indicator tube from old valve radios, as a round eye and as a glowing bar. | **Level Meter**<br>LED bars for average and peak level with dB readouts. |
+| ![Nixie clock](docs/screenshots/nixie-clock.jpg) | |
+| **Nixie Clock**<br>The time in glowing Nixie tubes. The separator dots blink to the beat and bar tubes show the level. | |
+
+### Measuring tools
+
+| | |
+|---|---|
+| ![Sound level meter](docs/screenshots/sound-level.jpg) | ![BPM display](docs/screenshots/bpm.jpg) |
+| **Sound Level dB(A)**<br>A sound level meter with A-weighting, maximum and 60-second average, and a history graph. You can calibrate it against a reference meter. | **BPM Display**<br>Detects the tempo of the music, names the tempo (e.g. *Allegro*), shows the beats as they happen and draws the tempo over the last 3 minutes. |
+| ![Notes and chords](docs/screenshots/notes-chords.jpg) | |
+| **Notes & Chords**<br>Shows which of the 12 notes are sounding, detects the major or minor chord being played and lights up the matching keys on a piano keyboard. | |
+
+### Visualizations
+
+| | |
+|---|---|
+| ![Spectrogram](docs/screenshots/spectrogram.jpg) | ![Pulsar lines](docs/screenshots/pulsar-lines.jpg) |
+| **Spectrogram**<br>A scrolling waterfall of the last ~8 seconds of sound. | **Pulsar Lines**<br>Stacked spectrum lines in the style of a famous album cover. |
+| ![Phosphor oscilloscope](docs/screenshots/phosphor-scope.jpg) | ![Demoscene fire](docs/screenshots/fire.jpg) |
+| **Phosphor Oscilloscope**<br>A green CRT oscilloscope screen with afterglow. | **Demoscene Fire**<br>The classic demoscene fire effect, driven by the music. |
+| ![Light organ](docs/screenshots/light-organ.jpg) | ![Starfield](docs/screenshots/starfield.jpg) |
+| **Light Organ**<br>Four colored lamps for bass, low mids, high mids and treble. It never strobes. | **Starfield**<br>A flight through space that speeds up with the bass. |
+| ![Radial spectrum](docs/screenshots/radial.jpg) | ![MilkDrop-style visualizer](docs/screenshots/milkdrop-2.jpg) |
+| **Radial**<br>A circular spectrum with a pulsing bass core and a waveform ring. | **MilkDrop Style**<br>A flowing, hypnotic light show inspired by Winamp's MilkDrop, with 12 built-in presets. Presets change automatically on a beat, or you can swipe up or down to switch them yourself. |
+
+## How to use it
+
+| Action | What it does |
+|---|---|
+| **Tap** or **swipe left/right** | Next / previous view |
+| **Swipe up/down** (MilkDrop view) | Next / previous preset |
+| **Long-press** | Open the settings |
+
+The first time you start the app, Android asks for permission to use the microphone. The app only needs it to analyze the sound and does not record anything.
+
+## Settings
+
+![Settings](docs/screenshots/settings.jpg)
+
+Long-press anywhere to open the settings:
+
+- **Views**: jump straight to a view, and choose which views appear when you tap or swipe through them
+- **Always-on mode**
+  - *Slideshow*: switch views automatically every 1, 2 or 5 minutes
+  - *Show clock*: show the time on top of any view
+  - *Sleep on silence*: dim the screen after 2, 5 or 15 minutes of silence. Music or a touch wakes it up again.
+- **Sensitivity**: automatic adjustment (on by default), manual sensitivity, dynamic range and treble boost
+- **Winamp Classic**: bar width, color style, peaks, fall-off speeds, oscilloscope style and original size
+- **Sound level**: calibration for the dB(A) meter
+- **MilkDrop style**: preset change interval (10, 20 or 40 seconds, or manual only) and render resolution
+- **Performance**: 60 or 30 FPS, and an optional FPS counter
+
+> The app's interface is currently in German.
+
+## Requirements
+
+- An Android phone or tablet running **Android 5.0** or newer
+- A built-in **microphone**
+- OpenGL ES 2.0 support (almost every Android device has it)
+- No internet connection or account
+
+The app works in portrait and landscape. Landscape looks best on most views.
+
+## Installation
+
+### Install the APK
+
+1. Download the latest APK from the [Releases](../../releases) page onto your device.
+2. Open the file. If Android asks, allow installing apps from this source.
+3. Start **VU-Meter** and allow microphone access.
+
+### Build it yourself
+
+You need JDK 17 and the Android SDK (platform 35).
 
 ```sh
+git clone https://github.com/michael-hatz/VU-Meter.git
+cd VU-Meter
 echo "sdk.dir=$HOME/Android/Sdk" > local.properties
-JAVA_HOME=$HOME/Android/jdk17 ./gradlew assembleDebug
+./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Unit-Tests (FFT-Normierung, Tempo-Erkennung): `./gradlew testDebugUnitTest`
+`./gradlew assembleRelease` builds an unsigned release APK in the format F-Droid expects.
 
-`assembleRelease` erzeugt ein unsigniertes APK (`app-release-unsigned.apk`), wie es F-Droid erwartet.
-F-Droid-Metadaten liegen unter `fastlane/metadata/android/`.
+### Demo mode
 
-### Demo-Modus
-
-Ohne Mikrofon (z. B. im Emulator oder für Screenshots) lässt sich ein synthetisches Signal einspeisen:
+To try the app without a microphone (for example in the emulator), start it with a built-in test signal:
 
 ```sh
 adb shell am start -n net.schmalenstroer.vumeter/.MainActivity -e demo 1
 ```
+
+## Tips
+
+- Place the device near the speakers but not right in front of them. Very loud sound can overload the microphone.
+- Readings from the sound level meter depend on your device's microphone. If accuracy matters, calibrate it against a real sound level meter in the settings.
+- For a permanent display, connect a charger and enable the slideshow and sleep mode.
