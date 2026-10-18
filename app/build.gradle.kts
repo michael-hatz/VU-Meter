@@ -15,8 +15,23 @@ android {
         versionName = "1.0"
     }
 
+    // Signierung nur, wenn die Umgebungsvariablen gesetzt sind (GitHub-Release-Workflow).
+    // Ohne sie bleibt das Release-APK unsigniert, wie F-Droid es erwartet.
+    val keystoreFile = System.getenv("VUMETER_KEYSTORE")
+    if (keystoreFile != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("VUMETER_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("VUMETER_KEY_ALIAS")
+                keyPassword = System.getenv("VUMETER_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (keystoreFile != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))

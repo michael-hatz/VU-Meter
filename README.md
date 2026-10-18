@@ -4,6 +4,8 @@
 
 VU-Meter listens to the music playing in the room through your device's built-in microphone and shows it live on screen, in 20 different views. You get the classic Winamp spectrum, analog needle meters, glowing tube displays, a sound level meter, a BPM counter and a MilkDrop-style light show.
 
+**[⬇ Download the APK](https://github.com/michael-hatz/VU-Meter/releases/latest/download/VU-Meter.apk)** · Android 5.0+ · [Installation](#installation)
+
 It works with any music source (a record player, the radio, a live band or a party next door) because it listens instead of connecting to a player. Put it next to your stereo and it works as a retro hi-fi display.
 
 <p align="center">
@@ -114,7 +116,7 @@ The app works in portrait and landscape. Landscape looks best on most views.
 
 ### Install the APK
 
-1. Download the latest APK from the [Releases](../../releases) page onto your device.
+1. **[Download VU-Meter.apk](https://github.com/michael-hatz/VU-Meter/releases/latest/download/VU-Meter.apk)** onto your device (older versions are on the [Releases](https://github.com/michael-hatz/VU-Meter/releases) page).
 2. Open the file. If Android asks, allow installing apps from this source.
 3. Start **VU-Meter** and allow microphone access.
 
